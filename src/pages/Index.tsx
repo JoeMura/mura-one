@@ -2,16 +2,19 @@ import { useState, useMemo } from 'react';
 import { Navbar } from '@/components/Navbar';
 import { HeroSection } from '@/components/HeroSection';
 import { PropertyCard } from '@/components/PropertyCard';
+import { PropertyMap } from '@/components/PropertyMap';
 import { HowItWorks } from '@/components/HowItWorks';
 import { Footer } from '@/components/Footer';
 import { properties, priceRanges } from '@/data/properties';
-import { Home } from 'lucide-react';
+import { Home, LayoutGrid, Map } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 const Index = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedLocation, setSelectedLocation] = useState('All Locations');
   const [selectedType, setSelectedType] = useState('all');
   const [selectedPrice, setSelectedPrice] = useState('all');
+  const [viewMode, setViewMode] = useState<'grid' | 'map'>('grid');
 
   const filteredProperties = useMemo(() => {
     return properties.filter((property) => {
@@ -82,7 +85,7 @@ const Index = () => {
         {/* All Properties */}
         <section className="py-20 bg-secondary/30">
           <div className="container">
-            <div className="flex items-center justify-between mb-10">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-10">
               <div>
                 <span className="inline-flex items-center gap-2 bg-primary/10 text-primary px-4 py-2 rounded-full text-sm font-medium mb-3">
                   <Home className="w-4 h-4" />
@@ -94,6 +97,27 @@ const Index = () => {
                 <p className="text-muted-foreground mt-2">
                   {filteredProperties.length} properties found
                 </p>
+              </div>
+              
+              <div className="flex items-center gap-2 bg-background rounded-lg p-1 border border-border">
+                <Button
+                  variant={viewMode === 'grid' ? 'default' : 'ghost'}
+                  size="sm"
+                  onClick={() => setViewMode('grid')}
+                  className="gap-2"
+                >
+                  <LayoutGrid className="w-4 h-4" />
+                  Grid
+                </Button>
+                <Button
+                  variant={viewMode === 'map' ? 'default' : 'ghost'}
+                  size="sm"
+                  onClick={() => setViewMode('map')}
+                  className="gap-2"
+                >
+                  <Map className="w-4 h-4" />
+                  Map
+                </Button>
               </div>
             </div>
 
@@ -109,6 +133,8 @@ const Index = () => {
                   Try adjusting your search filters
                 </p>
               </div>
+            ) : viewMode === 'map' ? (
+              <PropertyMap properties={filteredProperties} />
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {(regularProperties.length > 0 ? regularProperties : filteredProperties).map((property, index) => (
