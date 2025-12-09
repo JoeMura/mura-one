@@ -26,7 +26,7 @@ const Login = () => {
           title: 'Login successful',
           description: 'Welcome to your house hunting dashboard!',
         });
-        navigate('/dashboard');
+        navigate('/');
       } else {
         toast({
           title: 'Login failed',
