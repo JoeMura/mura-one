@@ -87,6 +87,7 @@ const AddProperty = () => {
       title: 'Listing submitted!',
       description: 'Your property has been submitted for review.',
     });
+    navigate('/');
   };
 
   const isStepOneValid = formData.title && formData.type && formData.rent && formData.location;
