@@ -8,16 +8,12 @@ type VerificationStatus = 'pending' | 'uploaded' | 'verified' | 'rejected';
 
 interface IdCardUploadProps {
   onStatusChange?: (status: VerificationStatus) => void;
+  onFileSelect?: (file: File | null) => void;
 }
 
-export const IdCardUpload = ({ onStatusChange }: IdCardUploadProps) => {
-  const [status, setStatus] = useState<VerificationStatus>(() => {
-    const saved = localStorage.getItem('idCardStatus');
-    return (saved as VerificationStatus) || 'pending';
-  });
-  const [preview, setPreview] = useState<string | null>(() => {
-    return localStorage.getItem('idCardPreview');
-  });
+export const IdCardUpload = ({ onStatusChange, onFileSelect }: IdCardUploadProps) => {
+  const [status, setStatus] = useState<VerificationStatus>('pending');
+  const [preview, setPreview] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
@@ -48,35 +44,35 @@ export const IdCardUpload = ({ onStatusChange }: IdCardUploadProps) => {
 
     setIsUploading(true);
 
-    // Create preview
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      const base64 = reader.result as string;
-      setPreview(base64);
-      localStorage.setItem('idCardPreview', base64);
+    // Create preview using object URL (in-memory only, no localStorage)
+    const objectUrl = URL.createObjectURL(file);
+    setPreview(objectUrl);
+    
+    // Notify parent component of file selection
+    onFileSelect?.(file);
+    
+    // Simulate upload delay
+    setTimeout(() => {
+      setStatus('uploaded');
+      onStatusChange?.('uploaded');
+      setIsUploading(false);
       
-      // Simulate upload delay
-      setTimeout(() => {
-        setStatus('uploaded');
-        localStorage.setItem('idCardStatus', 'uploaded');
-        onStatusChange?.('uploaded');
-        setIsUploading(false);
-        
-        toast({
-          title: "ID Card Uploaded",
-          description: "Your ID card has been uploaded. Verification pending.",
-        });
-      }, 1500);
-    };
-    reader.readAsDataURL(file);
+      toast({
+        title: "ID Card Selected",
+        description: "Your ID card is ready. It will be uploaded securely when you submit.",
+      });
+    }, 1000);
   };
 
   const handleRemove = () => {
+    // Revoke object URL to free memory
+    if (preview) {
+      URL.revokeObjectURL(preview);
+    }
     setPreview(null);
     setStatus('pending');
-    localStorage.removeItem('idCardPreview');
-    localStorage.setItem('idCardStatus', 'pending');
     onStatusChange?.('pending');
+    onFileSelect?.(null);
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
@@ -88,7 +84,7 @@ export const IdCardUpload = ({ onStatusChange }: IdCardUploadProps) => {
         return (
           <div className="flex items-center gap-2 text-amber-600 bg-amber-50 px-3 py-1.5 rounded-full text-sm font-medium">
             <Clock className="h-4 w-4" />
-            Verification Pending
+            Ready to Submit
           </div>
         );
       case 'verified':
@@ -159,7 +155,7 @@ export const IdCardUpload = ({ onStatusChange }: IdCardUploadProps) => {
             {isUploading ? (
               <div className="flex flex-col items-center gap-2 text-muted-foreground">
                 <div className="h-10 w-10 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-                <span className="text-sm">Uploading...</span>
+                <span className="text-sm">Processing...</span>
               </div>
             ) : (
               <div className="flex flex-col items-center gap-2 text-muted-foreground">
@@ -172,7 +168,7 @@ export const IdCardUpload = ({ onStatusChange }: IdCardUploadProps) => {
         )}
 
         <p className="text-xs text-muted-foreground mt-4">
-          Your ID card will be reviewed by our team. This typically takes 1-2 business days.
+          Your ID card will be securely uploaded and reviewed by our team. This typically takes 1-2 business days.
         </p>
       </CardContent>
     </Card>
