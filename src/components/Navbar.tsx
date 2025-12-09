@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { Home, Menu, X, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -35,7 +36,9 @@ export const Navbar = () => {
 
           {/* CTA Buttons */}
           <div className="hidden md:flex items-center gap-3">
-            <Button variant="ghost">Sign In</Button>
+            <Button variant="ghost" asChild>
+              <Link to="/login">Sign In</Link>
+            </Button>
             <Button variant="hero">
               <Plus className="w-4 h-4" />
               List Property Free
@@ -69,7 +72,9 @@ export const Navbar = () => {
               For Landlords
             </a>
             <div className="flex flex-col gap-2 pt-4 border-t border-border">
-              <Button variant="ghost" className="justify-start">Sign In</Button>
+              <Button variant="ghost" className="justify-start" asChild>
+                <Link to="/login">Sign In</Link>
+              </Button>
               <Button variant="hero">
                 <Plus className="w-4 h-4" />
                 List Property Free
