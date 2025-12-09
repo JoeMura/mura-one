@@ -1,9 +1,7 @@
-import { useEffect, useRef, useState } from 'react';
-import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
+import { useEffect, useRef } from 'react';
 import L from 'leaflet';
 import { Property } from '@/data/properties';
 import { Bed, Bath, Square, Phone, Mail } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 import 'leaflet/dist/leaflet.css';
 
 // Fix for default marker icons in Leaflet with bundlers
@@ -11,13 +9,17 @@ import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png';
 import markerIcon from 'leaflet/dist/images/marker-icon.png';
 import markerShadow from 'leaflet/dist/images/marker-shadow.png';
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-delete (L.Icon.Default.prototype as any)._getIconUrl;
-L.Icon.Default.mergeOptions({
+const DefaultIcon = L.icon({
   iconUrl: markerIcon,
   iconRetinaUrl: markerIcon2x,
   shadowUrl: markerShadow,
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
+  popupAnchor: [1, -34],
+  shadowSize: [41, 41],
 });
+
+L.Marker.prototype.options.icon = DefaultIcon;
 
 // Nairobi coordinates for different locations
 const locationCoords: Record<string, [number, number]> = {
@@ -36,143 +38,132 @@ const locationCoords: Record<string, [number, number]> = {
 const getPropertyCoords = (location: string): [number, number] => {
   for (const [area, coords] of Object.entries(locationCoords)) {
     if (location.includes(area)) {
-      // Add slight random offset to prevent markers from stacking
       return [
         coords[0] + (Math.random() - 0.5) * 0.01,
         coords[1] + (Math.random() - 0.5) * 0.01,
       ];
     }
   }
-  return [-1.2864, 36.8172]; // Default Nairobi center
+  return [-1.2864, 36.8172];
+};
+
+const formatPrice = (price: number) => {
+  return new Intl.NumberFormat('en-KE', {
+    style: 'currency',
+    currency: 'KES',
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(price);
+};
+
+const createPopupContent = (property: Property): string => {
+  return `
+    <div style="min-width: 280px; padding: 8px;">
+      <img
+        src="${property.image}"
+        alt="${property.title}"
+        style="width: 100%; height: 128px; object-fit: cover; border-radius: 8px; margin-bottom: 12px;"
+      />
+      <h3 style="font-weight: 600; color: #111827; font-size: 14px; margin-bottom: 4px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
+        ${property.title}
+      </h3>
+      <p style="font-size: 12px; color: #6b7280; margin-bottom: 8px;">
+        ${property.location}
+      </p>
+      <p style="color: #059669; font-weight: 700; font-size: 18px; margin-bottom: 12px;">
+        ${formatPrice(property.price)}
+        <span style="font-size: 12px; color: #6b7280; font-weight: 400;">/${property.priceType}</span>
+      </p>
+      
+      <div style="display: flex; align-items: center; gap: 12px; font-size: 12px; color: #6b7280; margin-bottom: 12px;">
+        <span style="display: flex; align-items: center; gap: 4px;">
+          🛏️ ${property.bedrooms}
+        </span>
+        <span style="display: flex; align-items: center; gap: 4px;">
+          🚿 ${property.bathrooms}
+        </span>
+        <span style="display: flex; align-items: center; gap: 4px;">
+          📐 ${property.size}m²
+        </span>
+      </div>
+
+      <div style="border-top: 1px solid #e5e7eb; padding-top: 12px;">
+        <p style="font-size: 12px; font-weight: 500; color: #111827; margin-bottom: 8px;">
+          Contact: ${property.landlord.name}
+        </p>
+        <div style="display: flex; gap: 8px;">
+          <a
+            href="tel:${property.landlord.phone}"
+            style="flex: 1; display: inline-flex; align-items: center; justify-content: center; font-size: 12px; height: 32px; padding: 0 12px; background-color: #059669; color: white; border-radius: 6px; text-decoration: none;"
+          >
+            📞 Call
+          </a>
+          <a
+            href="mailto:${property.landlord.email}"
+            style="flex: 1; display: inline-flex; align-items: center; justify-content: center; font-size: 12px; height: 32px; padding: 0 12px; border: 1px solid #d1d5db; color: #374151; border-radius: 6px; text-decoration: none; background: white;"
+          >
+            ✉️ Email
+          </a>
+        </div>
+      </div>
+    </div>
+  `;
 };
 
 interface PropertyMapProps {
   properties: Property[];
 }
 
-// Component to handle map invalidation after render
-const MapResizer = () => {
-  const map = useMap();
-  
-  useEffect(() => {
-    setTimeout(() => {
-      map.invalidateSize();
-    }, 100);
-  }, [map]);
-  
-  return null;
-};
-
-// Property marker component
-const PropertyMarker = ({ property }: { property: Property }) => {
-  const coords = getPropertyCoords(property.location);
-  
-  const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('en-KE', {
-      style: 'currency',
-      currency: 'KES',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(price);
-  };
-
-  return (
-    <Marker position={coords}>
-      <Popup maxWidth={320}>
-        <div className="p-2 min-w-[280px]">
-          <img
-            src={property.image}
-            alt={property.title}
-            className="w-full h-32 object-cover rounded-lg mb-3"
-          />
-          <h3 className="font-semibold text-gray-900 text-sm mb-1 line-clamp-2">
-            {property.title}
-          </h3>
-          <p className="text-xs text-gray-500 mb-2">
-            {property.location}
-          </p>
-          <p className="text-emerald-600 font-bold text-lg mb-3">
-            {formatPrice(property.price)}
-            <span className="text-xs text-gray-500 font-normal">
-              /{property.priceType}
-            </span>
-          </p>
-          
-          <div className="flex items-center gap-3 text-xs text-gray-500 mb-3">
-            <span className="flex items-center gap-1">
-              <Bed className="w-3 h-3" />
-              {property.bedrooms}
-            </span>
-            <span className="flex items-center gap-1">
-              <Bath className="w-3 h-3" />
-              {property.bathrooms}
-            </span>
-            <span className="flex items-center gap-1">
-              <Square className="w-3 h-3" />
-              {property.size}m²
-            </span>
-          </div>
-
-          <div className="border-t border-gray-200 pt-3">
-            <p className="text-xs font-medium text-gray-900 mb-2">
-              Contact: {property.landlord.name}
-            </p>
-            <div className="flex gap-2">
-              <a
-                href={`tel:${property.landlord.phone}`}
-                className="flex-1 inline-flex items-center justify-center text-xs h-8 px-3 bg-emerald-600 text-white rounded-md hover:bg-emerald-700"
-              >
-                <Phone className="w-3 h-3 mr-1" />
-                Call
-              </a>
-              <a
-                href={`mailto:${property.landlord.email}`}
-                className="flex-1 inline-flex items-center justify-center text-xs h-8 px-3 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50"
-              >
-                <Mail className="w-3 h-3 mr-1" />
-                Email
-              </a>
-            </div>
-          </div>
-        </div>
-      </Popup>
-    </Marker>
-  );
-};
-
 export const PropertyMap = ({ properties }: PropertyMapProps) => {
-  const nairobiCenter: [number, number] = [-1.2864, 36.8172];
-  const [mapReady, setMapReady] = useState(false);
+  const mapContainer = useRef<HTMLDivElement>(null);
+  const mapInstance = useRef<L.Map | null>(null);
+  const markersRef = useRef<L.Marker[]>([]);
 
   useEffect(() => {
-    setMapReady(true);
+    if (!mapContainer.current || mapInstance.current) return;
+
+    const nairobiCenter: [number, number] = [-1.2864, 36.8172];
+
+    mapInstance.current = L.map(mapContainer.current, {
+      center: nairobiCenter,
+      zoom: 11,
+      scrollWheelZoom: true,
+    });
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+    }).addTo(mapInstance.current);
+
+    return () => {
+      if (mapInstance.current) {
+        mapInstance.current.remove();
+        mapInstance.current = null;
+      }
+    };
   }, []);
 
-  if (!mapReady) {
-    return (
-      <div className="w-full h-[600px] rounded-xl overflow-hidden border border-border shadow-lg bg-muted flex items-center justify-center">
-        <p className="text-muted-foreground">Loading map...</p>
-      </div>
-    );
-  }
+  useEffect(() => {
+    if (!mapInstance.current) return;
+
+    // Clear existing markers
+    markersRef.current.forEach((marker) => marker.remove());
+    markersRef.current = [];
+
+    // Add new markers
+    properties.forEach((property) => {
+      const coords = getPropertyCoords(property.location);
+      const marker = L.marker(coords)
+        .addTo(mapInstance.current!)
+        .bindPopup(createPopupContent(property), {
+          maxWidth: 320,
+        });
+      markersRef.current.push(marker);
+    });
+  }, [properties]);
 
   return (
     <div className="w-full h-[600px] rounded-xl overflow-hidden border border-border shadow-lg">
-      <MapContainer
-        center={nairobiCenter}
-        zoom={11}
-        style={{ height: '100%', width: '100%' }}
-        scrollWheelZoom={true}
-      >
-        <MapResizer />
-        <TileLayer
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-        />
-        {properties.map((property) => (
-          <PropertyMarker key={property.id} property={property} />
-        ))}
-      </MapContainer>
+      <div ref={mapContainer} className="w-full h-full" />
     </div>
   );
 };
