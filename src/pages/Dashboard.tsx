@@ -1,24 +1,30 @@
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
+import { useAuth } from '@/hooks/useAuth';
 
 const Dashboard = () => {
   const navigate = useNavigate();
-  const [user, setUser] = useState<any>(null);
+  const { user, loading, signOut } = useAuth();
 
   useEffect(() => {
-    const storedUser = localStorage.getItem('user');
-    if (!storedUser) {
+    if (!loading && !user) {
       navigate('/login');
-      return;
     }
-    setUser(JSON.parse(storedUser));
-  }, [navigate]);
+  }, [user, loading, navigate]);
 
-  const handleLogout = () => {
-    localStorage.removeItem('user');
+  const handleLogout = async () => {
+    await signOut();
     navigate('/login');
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="h-8 w-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
 
   if (!user) {
     return null;
@@ -36,7 +42,7 @@ const Dashboard = () => {
         
         <div className="bg-card rounded-xl shadow-lg border border-border p-6">
           <h2 className="text-xl font-semibold text-foreground mb-4">
-            Welcome, {user.name || user.email || 'User'}!
+            Welcome, {user.user_metadata?.full_name || user.email || 'User'}!
           </h2>
           <p className="text-muted-foreground">
             You're now logged in to your house hunting dashboard.
