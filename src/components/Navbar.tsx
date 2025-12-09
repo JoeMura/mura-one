@@ -1,39 +1,10 @@
-import { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { Home, Menu, X, Plus, LogOut } from 'lucide-react';
+import { useState } from 'react';
+import { Home, Menu, X, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
 import { cn } from '@/lib/utils';
-
-interface User {
-  name?: string;
-  email?: string;
-  picture?: string;
-}
 
 export const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const [user, setUser] = useState<User | null>(null);
-  const navigate = useNavigate();
-
-  useEffect(() => {
-    const storedUser = localStorage.getItem('user');
-    if (storedUser) {
-      setUser(JSON.parse(storedUser));
-    }
-  }, []);
-
-  const handleLogout = () => {
-    localStorage.removeItem('user');
-    setUser(null);
-    navigate('/');
-  };
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-xl border-b border-border/50">
@@ -64,33 +35,10 @@ export const Navbar = () => {
 
           {/* CTA Buttons */}
           <div className="hidden md:flex items-center gap-3">
-            {user ? (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" className="relative h-10 w-10 rounded-full p-0">
-                    <Avatar className="h-10 w-10">
-                      <AvatarImage src={user.picture} alt={user.name || 'User'} />
-                      <AvatarFallback>{user.name?.charAt(0) || 'U'}</AvatarFallback>
-                    </Avatar>
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuItem onClick={handleLogout}>
-                    <LogOut className="mr-2 h-4 w-4" />
-                    Sign Out
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            ) : (
-              <Button variant="ghost" asChild>
-                <Link to="/login">Sign In</Link>
-              </Button>
-            )}
-            <Button variant="hero" asChild>
-              <Link to="/add-property">
-                <Plus className="w-4 h-4" />
-                List Property Free
-              </Link>
+            <Button variant="ghost">Sign In</Button>
+            <Button variant="hero">
+              <Plus className="w-4 h-4" />
+              List Property Free
             </Button>
           </div>
 
@@ -121,21 +69,10 @@ export const Navbar = () => {
               For Landlords
             </a>
             <div className="flex flex-col gap-2 pt-4 border-t border-border">
-              {user ? (
-                <Button variant="ghost" className="justify-start" onClick={handleLogout}>
-                  <LogOut className="mr-2 h-4 w-4" />
-                  Sign Out
-                </Button>
-              ) : (
-                <Button variant="ghost" className="justify-start" asChild>
-                  <Link to="/login">Sign In</Link>
-                </Button>
-              )}
-              <Button variant="hero" asChild>
-                <Link to="/add-property">
-                  <Plus className="w-4 h-4" />
-                  List Property Free
-                </Link>
+              <Button variant="ghost" className="justify-start">Sign In</Button>
+              <Button variant="hero">
+                <Plus className="w-4 h-4" />
+                List Property Free
               </Button>
             </div>
           </div>
