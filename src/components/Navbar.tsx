@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Home, Menu, X, Plus, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -10,20 +10,30 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { cn } from '@/lib/utils';
-import { useAuth } from '@/hooks/useAuth';
+
+interface User {
+  name?: string;
+  email?: string;
+  picture?: string;
+}
 
 export const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const [user, setUser] = useState<User | null>(null);
   const navigate = useNavigate();
-  const { user, signOut } = useAuth();
 
-  const handleLogout = async () => {
-    await signOut();
+  useEffect(() => {
+    const storedUser = localStorage.getItem('user');
+    if (storedUser) {
+      setUser(JSON.parse(storedUser));
+    }
+  }, []);
+
+  const handleLogout = () => {
+    localStorage.removeItem('user');
+    setUser(null);
     navigate('/');
   };
-
-  const userAvatar = user?.user_metadata?.avatar_url || user?.user_metadata?.picture;
-  const userName = user?.user_metadata?.full_name || user?.user_metadata?.name;
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-xl border-b border-border/50">
@@ -59,8 +69,8 @@ export const Navbar = () => {
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" className="relative h-10 w-10 rounded-full p-0">
                     <Avatar className="h-10 w-10">
-                      <AvatarImage src={userAvatar} alt={userName || 'User'} />
-                      <AvatarFallback>{userName?.charAt(0) || 'U'}</AvatarFallback>
+                      <AvatarImage src={user.picture} alt={user.name || 'User'} />
+                      <AvatarFallback>{user.name?.charAt(0) || 'U'}</AvatarFallback>
                     </Avatar>
                   </Button>
                 </DropdownMenuTrigger>
