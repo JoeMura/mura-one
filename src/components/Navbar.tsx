@@ -86,11 +86,9 @@ export const Navbar = () => {
                 <Link to="/login">Sign In</Link>
               </Button>
             )}
-            <Button variant="hero" asChild>
-              <Link to="/add-property">
-                <Plus className="w-4 h-4" />
-                List Property Free
-              </Link>
+            <Button variant="hero">
+              <Plus className="w-4 h-4" />
+              List Property Free
             </Button>
           </div>
 
@@ -131,11 +129,9 @@ export const Navbar = () => {
                   <Link to="/login">Sign In</Link>
                 </Button>
               )}
-              <Button variant="hero" asChild>
-                <Link to="/add-property">
-                  <Plus className="w-4 h-4" />
-                  List Property Free
-                </Link>
+              <Button variant="hero">
+                <Plus className="w-4 h-4" />
+                List Property Free
               </Button>
             </div>
           </div>
