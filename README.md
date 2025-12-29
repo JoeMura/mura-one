@@ -1,4 +1,3 @@
-This professional GitHub README is designed to showcase your technical skills while being transparent about the current development phase. It highlights your use of Lovable AI and Supabase, framing the project through the lens of a Cyber Security student to add extra value to your profile.
 AI-Powered Remote Housing Platform
 Project Overview
 This project is a modern web application designed to streamline the real estate search process in Kenya. It allows users to find and view potential houses from the comfort of their homes, eliminating the need for expensive and time-consuming travel to physical locations.
